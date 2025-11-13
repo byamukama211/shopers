@@ -18,8 +18,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+
 });
 
 // ensure uploads folder exists
