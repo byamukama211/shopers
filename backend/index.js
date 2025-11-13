@@ -5,9 +5,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import fs from 'fs';
-import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
+
+import { pool } from './db.js';   // 🔥 Use the SSL-enabled pool
+
 dotenv.config();
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
