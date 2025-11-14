@@ -6,24 +6,18 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
-
-
-import { pool } from './db.js';   // 🔥 Use the SSL-enabled pool
+import { pool } from './db.js';   // 🔥 SSL-enabled pool
 
 dotenv.config();
 
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-app.use(cors({
-  origin: "*"
-}));
 
+app.use(cors({ origin: "*" })); // allow frontend requests
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-
-// ensure uploads folder exists
+// Ensure uploads folder exists
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
@@ -33,13 +27,33 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Admin login (simple)
+// --------- ROUTES ---------- //
+
+// Health check
+app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+// Test database connection
+app.get("/api/test", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).send("DB error");
+  }
+});
+
+// Admin login
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
   const correctUser = process.env.ADMIN_USER || 'admin';
   const correctPass = process.env.ADMIN_PASS || 'adminpass';
   if (username === correctUser && password === correctPass) {
-    const token = jwt.sign({ type: 'admin', user: username }, process.env.JWT_SECRET || 'devsecret', { expiresIn: '12h' });
+    const token = jwt.sign(
+      { type: 'admin', user: username },
+      process.env.JWT_SECRET || 'devsecret',
+      { expiresIn: '12h' }
+    );
     return res.json({ token });
   }
   return res.status(401).json({ error: 'invalid credentials' });
@@ -64,7 +78,11 @@ app.post('/api/admin/products', async (req, res) => {
 app.get('/api/products', async (req, res) => {
   try {
     const r = await pool.query('SELECT * FROM products ORDER BY id DESC');
-    const rows = r.rows.map(row => ({ ...row, images: JSON.parse(row.images || '[]'), price: Number(row.price) }));
+    const rows = r.rows.map(row => ({
+      ...row,
+      images: JSON.parse(row.images || '[]'),
+      price: Number(row.price)
+    }));
     res.json(rows);
   } catch (e) {
     console.error(e);
@@ -87,7 +105,7 @@ app.get('/api/product/:id', async (req, res) => {
   }
 });
 
-// Upload images (multipart) - returns array of paths
+// Upload images
 app.post('/api/admin/upload', upload.array('images', 20), (req, res) => {
   const files = (req.files || []).map(f => '/uploads/' + f.filename);
   res.json({ files });
@@ -97,8 +115,10 @@ app.post('/api/admin/upload', upload.array('images', 20), (req, res) => {
 app.post('/api/orders', async (req, res) => {
   try {
     const { customer_name, phone, area, address_note, items, delivery_fee, total } = req.body;
-    const r = await pool.query('INSERT INTO orders (customer_name, phone, area, address_note, items, delivery_fee, total) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id',
-      [customer_name, phone, area, address_note, JSON.stringify(items), delivery_fee, total]);
+    const r = await pool.query(
+      'INSERT INTO orders (customer_name, phone, area, address_note, items, delivery_fee, total) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id',
+      [customer_name, phone, area, address_note, JSON.stringify(items), delivery_fee, total]
+    );
     res.json({ id: r.rows[0].id, message: 'You will be contacted for verification' });
   } catch (e) {
     console.error(e);
@@ -106,7 +126,7 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-app.get('/api/health', (req, res) => res.json({ ok: true }));
+// ----------------------------- //
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log('Backend running on', PORT));
