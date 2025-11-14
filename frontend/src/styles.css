@@ -15,4 +15,18 @@ body{font-family:Arial,Helvetica,sans-serif;margin:0;color:#222}
 .main-img{width:400px;height:400px;object-fit:cover}
 .cart-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #eee}
 .checkout{padding:12px;border:1px solid #ddd;margin-top:12px}
-@media (max-width:640px){ .product-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));} .cart-overlay{width:calc(100% - 36px); right:18px; left:18px; bottom:80px;}
+@media (max-width: 640px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px; /* Adds spacing between items */
+  }
+  
+  .cart-overlay {
+    width: calc(100% - 36px);
+    right: 18px;
+    left: 18px;
+    bottom: 80px;
+    position: fixed; /* Ensure it's positioned */
+    z-index: 1000; /* Bring to front */
+  }
+}
