@@ -7,8 +7,11 @@ import Home from './pages/Home';
 import Cart from './pages/Cart';
 import Products from "./components/Products";
 
-export default function App() {
+import { useLocation } from "react-router-dom";
+export default function App() {const location = useLocation();
+  console.log("ROUTER WORKING:", location);
   return (
+    
     <>
       <Header />
       <Routes>
