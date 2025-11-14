@@ -7,6 +7,7 @@ import multer from 'multer';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 
+
 import { pool } from './db.js';   // 🔥 Use the SSL-enabled pool
 
 dotenv.config();
@@ -14,7 +15,10 @@ dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "*"
+}));
+
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
